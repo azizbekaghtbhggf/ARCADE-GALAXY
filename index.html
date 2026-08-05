@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCADE GALAXY — O'yinlar Olami</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #05060a;
+    --panel: rgba(255,255,255,0.03);
+    --violet: #6c5ce7;
+    --cyan: #00d9ff;
+    --gold: #ffd166;
+    --magenta: #ff3cac;
+    --green: #2ecc71;
+    --red: #ff5c5c;
+    --star: #e8ecf9;
+    --dim: #8890a8;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:100%; min-height:100%; background:var(--bg); color:var(--star); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  #bgstars{ position:fixed; inset:0; z-index:-1; display:block; }
+  h1,h2,h3,.disp{ font-family:'Space Grotesk',sans-serif; }
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  input{ font-family:inherit; }
+
+  .screen{ min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .hidden{ display:none !important; }
+
+  /* ---------- Name screen ---------- */
+  #screen-name h1{
+    font-size:clamp(38px,8vw,80px); font-weight:700; letter-spacing:-0.02em; text-align:center;
+    background:linear-gradient(135deg,var(--star) 15%,var(--cyan) 55%,var(--violet) 95%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 30px rgba(0,217,255,0.3));
+  }
+  #screen-name p{ color:var(--dim); margin-top:14px; text-align:center; font-size:clamp(14px,2vw,17px); max-width:420px; }
+  #name-form{ margin-top:36px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  #name-input{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.18); color:var(--star);
+    padding:14px 20px; border-radius:14px; font-size:16px; width:260px; outline:none; transition:border-color .2s;
+  }
+  #name-input:focus{ border-color:var(--cyan); }
+  #name-form button{
+    background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#05060a; font-weight:700;
+    padding:14px 26px; border-radius:14px; font-size:15px; letter-spacing:0.02em; transition:transform .15s;
+  }
+  #name-form button:hover{ transform:translateY(-2px) scale(1.03); }
+
+  /* ---------- Menu screen ---------- */
+  #screen-menu{ justify-content:flex-start; padding-top:56px; }
+  .menu-head{ text-align:center; margin-bottom:36px; }
+  .menu-head h2{ font-size:clamp(26px,5vw,44px); font-weight:700; }
+  .menu-head h2 span{ color:var(--gold); }
+  .menu-head p{ color:var(--dim); margin-top:8px; font-size:14px; }
+
+  .game-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:18px; width:100%; max-width:1100px;
+  }
+  .game-card{
+    background:var(--panel); border:1px solid rgba(232,236,249,0.1); border-radius:20px;
+    padding:24px 20px; text-align:left; color:var(--star); transition:transform .2s, border-color .2s, background .2s;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .game-card:hover{ transform:translateY(-6px); border-color:var(--cyan); background:rgba(0,217,255,0.06); }
+  .gc-emoji{ font-size:34px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.15)); }
+  .gc-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; }
+  .gc-desc{ font-size:13px; color:var(--dim); line-height:1.4; }
+
+  /* ---------- Game screen ---------- */
+  #screen-game{ justify-content:flex-start; padding-top:24px; }
+  .game-top{ display:flex; align-items:center; justify-content:space-between; width:100%; max-width:900px; margin-bottom:16px; }
+  #back-btn{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.15); color:var(--star);
+    padding:10px 18px; border-radius:12px; font-size:13px; letter-spacing:0.04em;
+  }
+  #back-btn:hover{ border-color:var(--cyan); }
+  #game-title-el{ font-weight:700; font-size:20px; }
+  #game-area{
+    position:relative; width:100%; max-width:900px; height:min(64vh,560px); min-height:420px;
+    background:rgba(255,255,255,0.02); border:1px solid rgba(232,236,249,0.08); border-radius:22px; overflow:hidden;
+  }
+  .game-wrap{ position:relative; width:100%; height:100%; }
+  .game-wrap.center{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; text-align:center; }
+  .game-wrap canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+  .hud-bar{
+    position:absolute; top:0; left:0; right:0; z-index:2; display:flex; justify-content:space-between; gap:12px;
+    padding:14px 20px; font-size:13px; background:linear-gradient(to bottom, rgba(5,6,10,0.85), transparent);
+    pointer-events:none;
+  }
+  .hud-bar b{ color:var(--gold); }
+
+  /* ---------- Tic Tac Toe ---------- */
+  .ttt-status{ color:var(--dim); font-size:14px; }
+  .ttt-board{ display:grid; grid-template-columns:repeat(3,84px); grid-template-rows:repeat(3,84px); gap:8px; }
+  .ttt-cell{
+    background:rgba(255,255,255,0.05); border:1px solid rgba(232,236,249,0.15); border-radius:14px;
+    font-size:34px; color:var(--star); display:flex; align-items:center; justify-content:center; transition:background .15s;
+  }
+  .ttt-cell:not(:disabled):hover{ background:rgba(0,217,255,0.12); }
+
+  /* ---------- Memory ---------- */
+  .mem-status{ position:absolute; top:14px; left:0; right:0; text-align:center; font-size:13px; color:var(--dim); z-index:2; }
+  .mem-status b{ color:var(--gold); }
+  .mem-grid{
+    position:absolute; inset:0; top:44px; display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:1fr;
+    gap:10px; padding:16px;
+  }
+  .mem-card{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.15); border-radius:12px;
+    font-size:clamp(20px,4vw,30px); display:flex; align-items:center; justify-content:center; color:var(--star);
+    transition:background .15s, transform .15s;
+  }
+  .mem-card.flipped, .mem-card.matched{ background:rgba(108,92,231,0.18); border-color:var(--violet); }
+  .mem-card.matched{ opacity:0.55; }
+
+  /* ---------- Reaction ---------- */
+  .rx-box{
+    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    background:#2a1414; transition:background .15s;
+  }
+  .rx-box.wait{ background:#2a1414; }
+  .rx-box.go{ background:#0f3d24; }
+  .rx-text{ font-family:'Space Grotesk',sans-serif; font-size:clamp(20px,4vw,32px); font-weight:700; text-align:center; padding:20px; }
+
+  /* ---------- RPS ---------- */
+  .rps-score{ font-size:15px; color:var(--dim); }
+  .rps-score b{ color:var(--gold); }
+  .rps-result{ font-size:16px; font-weight:600; min-height:24px; }
+  .rps-choices{ display:flex; gap:14px; }
+  .rps-btn{
+    background:rgba(255,255,255,0.05); border:1px solid rgba(232,236,249,0.15); border-radius:16px;
+    padding:16px 20px; font-size:15px; color:var(--star); line-height:1.6; transition:transform .15s, border-color .15s;
+  }
+  .rps-btn:hover{ transform:translateY(-4px); border-color:var(--magenta); }
+
+  /* ---------- Snake ---------- */
+  .sn-score{ position:absolute; top:14px; left:18px; font-size:13px; z-index:2; }
+  .sn-score b{ color:var(--gold); }
+  .sn-dpad{ position:absolute; bottom:14px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:6px; z-index:2; }
+  .sn-dpad-row{ display:flex; gap:6px; }
+  .sn-dbtn{
+    width:44px; height:44px; background:rgba(255,255,255,0.08); border:1px solid rgba(232,236,249,0.2);
+    border-radius:10px; color:var(--star); font-size:18px; display:flex; align-items:center; justify-content:center;
+  }
+  .sn-dbtn:active{ background:rgba(0,217,255,0.25); }
+
+  /* ---------- Catch stars ---------- */
+  .cs-hud{ position:absolute; top:14px; left:0; right:0; text-align:center; font-size:13px; z-index:2; }
+  .cs-hud b{ color:var(--gold); }
+
+  /* ---------- Guess number ---------- */
+  .gn-wrap p{ color:var(--dim); font-size:14px; max-width:360px; }
+  .gn-input-row{ display:flex; gap:10px; }
+  #gn-input{
+    background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.2); color:var(--star);
+    padding:12px 16px; border-radius:12px; width:140px; text-align:center; font-size:18px; outline:none;
+  }
+  #gn-input:focus{ border-color:var(--cyan); }
+  #gn-btn{
+    background:linear-gradient(135deg,var(--gold),var(--magenta)); color:#05060a; font-weight:700;
+    padding:12px 22px; border-radius:12px; font-size:14px;
+  }
+  .gn-hint{ font-size:17px; font-weight:600; min-height:26px; }
+  .gn-attempts{ color:var(--dim); font-size:13px; }
+  .gn-attempts b{ color:var(--gold); }
+
+  /* ---------- 2048 ---------- */
+  .g2-grid{ position:absolute; inset:44px 16px 16px 16px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr); gap:10px; }
+  .g2-cell{ background:rgba(255,255,255,0.06); border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(16px,3vw,26px); color:var(--star); transition:background .15s; }
+  .g2-cell.v2{ background:rgba(0,217,255,0.15); } .g2-cell.v4{ background:rgba(0,217,255,0.28); }
+  .g2-cell.v8{ background:rgba(108,92,231,0.4); color:#fff; } .g2-cell.v16{ background:rgba(108,92,231,0.55); color:#fff; }
+  .g2-cell.v32{ background:rgba(255,60,172,0.45); color:#fff; } .g2-cell.v64{ background:rgba(255,60,172,0.65); color:#fff; }
+  .g2-cell.v128{ background:rgba(255,209,102,0.55); color:#05060a; } .g2-cell.v256{ background:rgba(255,209,102,0.75); color:#05060a; }
+  .g2-cell.v512{ background:rgba(255,209,102,0.9); color:#05060a; } .g2-cell.v1024{ background:var(--gold); color:#05060a; }
+  .g2-cell.v2048{ background:var(--green); color:#05060a; }
+
+  /* ---------- Wordle ---------- */
+  .wd-grid{ display:flex; flex-direction:column; gap:6px; }
+  .wd-row{ display:flex; gap:6px; }
+  .wd-cell{ width:38px; height:38px; border:1px solid rgba(232,236,249,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+  .wd-cell.green{ background:var(--green); color:#05060a; border-color:var(--green); }
+  .wd-cell.yellow{ background:var(--gold); color:#05060a; border-color:var(--gold); }
+  .wd-cell.gray{ background:rgba(255,255,255,0.08); color:var(--dim); }
+
+  /* ---------- Color diff ---------- */
+  .cd-grid{ position:absolute; inset:44px 16px 16px 16px; display:grid; gap:8px; }
+  .cd-swatch{ border-radius:10px; border:none; }
+
+  /* ---------- Blackjack ---------- */
+  .bj-cards{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; justify-content:center; min-height:64px; }
+  .bj-card{ width:44px; height:60px; background:#fff; color:#111; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
+  .bj-actions{ display:flex; gap:10px; margin-top:22px; }
+
+  /* ---------- Wheel ---------- */
+  .wheel-wrap{ position:relative; width:220px; height:220px; }
+  .wheel{ width:100%; height:100%; border-radius:50%; border:4px solid rgba(232,236,249,0.3); }
+  .wheel-pointer{ position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:26px; color:var(--gold); z-index:2; filter:drop-shadow(0 0 6px rgba(255,209,102,0.6)); }
+
+  /* ---------- Mash button ---------- */
+  .mash-btn{ background:linear-gradient(135deg,var(--magenta),var(--gold)); color:#05060a; font-weight:700; font-size:20px; padding:22px 40px; border-radius:20px; }
+
+  /* ---------- Result modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(5,6,10,0.75); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .modal-box{
+    background:#0b0d15; border:1px solid rgba(232,236,249,0.15); border-radius:24px; padding:36px 32px;
+    max-width:420px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    animation:pop .25s ease;
+  }
+  @keyframes pop{ from{ transform:scale(0.85); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .modal-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(24px,5vw,32px); margin-bottom:14px; }
+  .modal-msg{ color:var(--star); font-size:15px; line-height:1.6; margin-bottom:26px; }
+  .modal-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .modal-actions button{
+    padding:12px 22px; border-radius:12px; font-size:14px; font-weight:600; transition:transform .15s;
+  }
+  .modal-actions button:hover{ transform:translateY(-2px); }
+  #retryBtn{ background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#05060a; }
+  #menuBtn{ background:rgba(255,255,255,0.08); color:var(--star); border:1px solid rgba(232,236,249,0.2); }
+
+  @media (max-width:480px){
+    .ttt-board{ grid-template-columns:repeat(3,70px); grid-template-rows:repeat(3,70px); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bgstars"></canvas>
+
+<!-- NAME SCREEN -->
+<div class="screen" id="screen-name">
+  <h1>ARCADE GALAXY</h1>
+  <p>8 ta qiziqarli o'yin, bitta koinot. Boshlashdan oldin ismingni ayt!</p>
+  <form id="name-form">
+    <input id="name-input" type="text" placeholder="Ismingni yoz..." maxlength="20" autocomplete="off">
+    <button type="submit">Kirish 🚀</button>
+  </form>
+</div>
+
+<!-- MENU SCREEN -->
+<div class="screen hidden" id="screen-menu">
+  <div class="menu-head">
+    <h2 id="greet">Salom!</h2>
+    <p>Bitta o'yinni tanla va boshla. Yutsang — chempion, yutqazsang — kula olasanmi? 😏</p>
+  </div>
+  <div class="game-grid" id="game-grid"></div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen hidden" id="screen-game">
+  <div class="game-top">
+    <button id="back-btn">← Menyu</button>
+    <div id="game-title-el"></div>
+    <div style="width:80px"></div>
+  </div>
+  <div id="game-area"></div>
+</div>
+
+<!-- RESULT MODAL -->
+<div class="modal-overlay hidden" id="resultModal">
+  <div class="modal-box">
+    <div class="modal-title" id="resultTitle"></div>
+    <div class="modal-msg" id="resultMsg"></div>
+    <div class="modal-actions">
+      <button id="retryBtn">Qayta urinish 🔁</button>
+      <button id="menuBtn">Menyuga qaytish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ Background starfield (always alive) ============ */
+(function(){
+  const c = document.getElementById('bgstars');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize(){ c.width = innerWidth; c.height = innerHeight; init(); }
+  function init(){
+    stars = [];
+    const count = Math.floor((c.width*c.height)/6000);
+    for(let i=0;i<count;i++){
+      stars.push({x:Math.random()*c.width, y:Math.random()*c.height, r:Math.random()*1.2+0.2, tw:Math.random()*Math.PI*2, sp:Math.random()*0.4+0.1});
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{
+      s.tw += 0.02*s.sp;
+      ctx.globalAlpha = Math.max(0.15, 0.5+Math.sin(s.tw)*0.4);
+      ctx.fillStyle = '#e8ecf9';
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ============ App state ============ */
+let playerName = 'Mehmon';
+let activeGame = null;
+let currentGameId = null;
+
+const screenName = document.getElementById('screen-name');
+const screenMenu = document.getElementById('screen-menu');
+const screenGame = document.getElementById('screen-game');
+const nameForm = document.getElementById('name-form');
+const nameInput = document.getElementById('name-input');
+const greetEl = document.getElementById('greet');
+const gameGrid = document.getElementById('game-grid');
+const gameArea = document.getElementById('game-area');
+const gameTitleEl = document.getElementById('game-title-el');
+const backBtn = document.getElementById('back-btn');
+const resultModal = document.getElementById('resultModal');
+const resultTitle = document.getElementById('resultTitle');
+const resultMsg = document.getElementById('resultMsg');
+const retryBtn = document.getElementById('retryBtn');
+const menuBtn = document.getElementById('menuBtn');
+
+const winLines = [
+  "{name}, ajoyib! Sen yutding! 🏆",
+  "Voy-bo'y, {name}! Bu haqiqiy g'alaba!",
+  "{name}, sen chempion ekansan! 🎉",
+  "Zo'r, {name}! Bugun kun seniki!",
+  "{name}, hatto kompyuter ham hayratda qoldi!"
+];
+const loseLines = [
+  "{name}, sen yutqazding! 😅",
+  "Voy, {name}... bu safar omad yor bo'lmadi. Sen yutqazding!",
+  "{name}, kompyuter kulib turibdi. Sen yutqazding!",
+  "Afsus, {name}! Sen yutqazding, lekin urinish chiroyli edi 😄",
+  "{name}, koinot senga qarshi chiqdi. Sen yutqazding!"
+];
+const drawLines = [
+  "Durrang, {name}! Hech kim yutmadi, hech kim yutqazmadi 🤝"
+];
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function finish(status, detail){
+  if(activeGame && activeGame.stop) activeGame.stop();
+  let title, pool;
+  if(status==='win'){ title='🏆 G\'ALABA!'; pool=winLines; }
+  else if(status==='lose'){ title='💀 YUTQAZDING!'; pool=loseLines; }
+  else { title='🤝 DURRANG'; pool=drawLines; }
+  resultTitle.textContent = title;
+  let msg = pick(pool).replace('{name}', playerName);
+  if(detail) msg += ' ' + detail;
+  resultMsg.textContent = msg;
+  resultModal.classList.remove('hidden');
+}
+
+function goToMenu(){
+  if(activeGame && activeGame.stop) activeGame.stop();
+  activeGame = null;
+  resultModal.classList.add('hidden');
+  screenGame.classList.add('hidden');
+  screenMenu.classList.remove('hidden');
+}
+
+function launchGame(id){
+  const g = GAMES.find(x=>x.id===id);
+  if(!g) return;
+  currentGameId = id;
+  gameArea.innerHTML = '';
+  gameTitleEl.textContent = g.emoji + ' ' + g.title;
+  screenMenu.classList.add('hidden');
+  screenGame.classList.remove('hidden');
+  resultModal.classList.add('hidden');
+  activeGame = g.init(gameArea, { name: playerName, finish });
+}
+
+backBtn.onclick = goToMenu;
+menuBtn.onclick = goToMenu;
+retryBtn.onclick = () => { resultModal.classList.add('hidden'); launchGame(currentGameId); };
+
+nameForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const v = nameInput.value.trim();
+  playerName = v || 'Mehmon';
+  screenName.classList.add('hidden');
+  screenMenu.classList.remove('hidden');
+  greetEl.innerHTML = `Salom, <span>${playerName}</span>! Nima o'ynaymiz?`;
+  renderMenu();
+});
+
+function renderMenu(){
+  gameGrid.innerHTML = '';
+  GAMES.forEach(g=>{
+    const card = document.createElement('button');
+    card.className = 'game-card';
+    card.innerHTML = `<div class="gc-emoji">${g.emoji}</div><div class="gc-title">${g.title}</div><div class="gc-desc">${g.desc}</div>`;
+    card.onclick = () => launchGame(g.id);
+    gameGrid.appendChild(card);
+  });
+}
+
+/* ============ GAME 1: SUPERNOVA ============ */
+function initSupernova(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Maqsad: <b>350</b></span><span id="sv-timer">20.0s</span><span>Ochko: <b id="sv-score">0</b></span></div>
+      <canvas id="sv-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#sv-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let particles = [];
+  let score = 0;
+  let timeLeft = 20;
+  const target = 350;
+  const scoreEl = container.querySelector('#sv-score');
+  const timerEl = container.querySelector('#sv-timer');
+  const COLORS = ['#00d9ff','#6c5ce7','#ff3cac','#ffd166'];
+
+  function explode(x,y){
+    const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+    for(let i=0;i<22;i++){
+      const angle = Math.random()*Math.PI*2;
+      const speed = Math.random()*6+2;
+      particles.push({x,y,vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, life:1, color, r:Math.random()*2.5+1});
+    }
+    score += 10;
+    scoreEl.textContent = score;
+  }
+  function onDown(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    explode(x,y);
+  }
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('touchstart', onDown, {passive:true});
+
+  let raf;
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.vx*=0.97; p.vy*=0.97;
+      p.x+=p.vx; p.y+=p.vy;
+      p.life -= 0.02;
+      ctx.globalAlpha = Math.max(p.life,0);
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+    ctx.globalAlpha = 1;
+    particles = particles.filter(p=>p.life>0);
+    raf = requestAnimationFrame(loop);
+  }
+  loop();
+
+  const timerInt = setInterval(()=>{
+    timeLeft -= 0.1;
+    timerEl.textContent = Math.max(timeLeft,0).toFixed(1)+'s';
+    if(timeLeft<=0){
+      clearInterval(timerInt);
+      if(score>=target) api.finish('win', `(${score} ochko to'pladi!)`);
+      else api.finish('lose', `(faqat ${score}/${target} ochko yig'ding)`);
+    }
+  }, 100);
+
+  function stop(){
+    cancelAnimationFrame(raf);
+    clearInterval(timerInt);
+    window.removeEventListener('resize', resize);
+  }
+  return { stop };
+}
+
+/* ============ GAME 2: TIC TAC TOE ============ */
+function initTicTacToe(container, api){
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div class="ttt-status" id="ttt-status">Sen: ❌ &nbsp;|&nbsp; Kompyuter: ⭕</div>
+      <div class="ttt-board" id="ttt-board"></div>
+    </div>`;
+  const boardEl = container.querySelector('#ttt-board');
+  const statusEl = container.querySelector('#ttt-status');
+  let board = Array(9).fill(null);
+  let over = false;
+  const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+  function checkWinner(b){
+    for(const [a,c,d] of lines){ if(b[a] && b[a]===b[c] && b[a]===b[d]) return b[a]; }
+    if(b.every(x=>x)) return 'draw';
+    return null;
+  }
+  function render(){
+    boardEl.innerHTML = '';
+    board.forEach((v,i)=>{
+      const cell = document.createElement('button');
+      cell.className = 'ttt-cell';
+      cell.textContent = v==='X' ? '❌' : v==='O' ? '⭕' : '';
+      cell.disabled = !!v || over;
+      cell.onclick = () => playerMove(i);
+      boardEl.appendChild(cell);
+    });
+  }
+  function playerMove(i){
+    if(board[i] || over) return;
+    board[i] = 'X';
+    render();
+    const w = checkWinner(board);
+    if(w){ endGame(w); return; }
+    statusEl.textContent = "Kompyuter o'ylayapti...";
+    setTimeout(computerMove, 450);
+  }
+  function computerMove(){
+    if(over) return;
+    const move = findBestMove();
+    board[move] = 'O';
+    render();
+    const w = checkWinner(board);
+    if(w){ endGame(w); return; }
+    statusEl.textContent = "Sen: ❌ &nbsp;|&nbsp; Kompyuter: ⭕";
+  }
+  function findBestMove(){
+    for(let i=0;i<9;i++){ if(!board[i]){ board[i]='O'; if(checkWinner(board)==='O'){ board[i]=null; return i; } board[i]=null; } }
+    for(let i=0;i<9;i++){ if(!board[i]){ board[i]='X'; if(checkWinner(board)==='X'){ board[i]=null; return i; } board[i]=null; } }
+    if(!board[4]) return 4;
+    const corners = [0,2,6,8].filter(i=>!board[i]);
+    if(corners.length) return corners[Math.floor(Math.random()*corners.length)];
+    const empties = board.map((v,i)=>v?null:i).filter(i=>i!==null);
+    return empties[Math.floor(Math.random()*empties.length)];
+  }
+  function endGame(w){
+    over = true;
+    render();
+    if(w==='X') api.finish('win', "(Kompyuterni mag'lub qilding!)");
+    else if(w==='O') api.finish('lose', "(Kompyuter g'alaba qozondi)");
+    else api.finish('draw', "(Hech kim yutmadi)");
+  }
+  render();
+  return { stop(){} };
+}
+
+/* ============ GAME 3: MEMORY ============ */
+function initMemory(container, api){
+  const icons = ['🚀','🪐','⭐','🌙','☄️','👽'];
+  let cards = [...icons, ...icons];
+  cards.sort(()=>Math.random()-0.5);
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="mem-status">Yurishlar: <b id="mem-moves">0</b>/<b>16</b> &nbsp;|&nbsp; Juftlar: <b id="mem-pairs">0</b>/6</div>
+      <div class="mem-grid" id="mem-grid"></div>
+    </div>`;
+  const grid = container.querySelector('#mem-grid');
+  const movesEl = container.querySelector('#mem-moves');
+  const pairsEl = container.querySelector('#mem-pairs');
+  const limit = 16;
+  let moves=0, pairsFound=0, flipped=[], lock=false, over=false;
+
+  cards.forEach((icon)=>{
+    const card = document.createElement('button');
+    card.className = 'mem-card';
+    card.dataset.icon = icon;
+    card.textContent = '❔';
+    card.onclick = () => flip(card);
+    grid.appendChild(card);
+  });
+
+  function flip(card){
+    if(lock || over || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    card.classList.add('flipped');
+    card.textContent = card.dataset.icon;
+    flipped.push(card);
+    if(flipped.length===2){
+      moves++; movesEl.textContent = moves;
+      lock = true;
+      const [a,b] = flipped;
+      if(a.dataset.icon===b.dataset.icon){
+        a.classList.add('matched'); b.classList.add('matched');
+        pairsFound++; pairsEl.textContent = pairsFound;
+        flipped = []; lock = false;
+        if(pairsFound===6){ over=true; api.finish('win', `(${moves} yurishda tugatding!)`); }
+      } else {
+        setTimeout(()=>{
+          a.classList.remove('flipped'); a.textContent = '❔';
+          b.classList.remove('flipped'); b.textContent = '❔';
+          flipped = []; lock = false;
+          if(moves>=limit && !over){ over=true; api.finish('lose', `(${limit} yurish tugadi, hammasi topilmadi)`); }
+        }, 700);
+      }
+    }
+  }
+  return { stop(){} };
+}
+
+/* ============ GAME 4: REACTION ============ */
+function initReaction(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="rx-box wait" id="rx-box"><div class="rx-text" id="rx-text">Tayyorlanyapti...</div></div>
+    </div>`;
+  const box = container.querySelector('#rx-box');
+  const text = container.querySelector('#rx-text');
+  let state = 'waiting';
+  let startTime, timeout;
+
+  function startRound(){
+    state = 'waiting';
+    box.className = 'rx-box wait';
+    text.textContent = "Kut... qizil ekanda BOSMA!";
+    const delay = 1000 + Math.random()*3000;
+    timeout = setTimeout(()=>{
+      state = 'go';
+      box.className = 'rx-box go';
+      text.textContent = 'HOZIR BOS!';
+      startTime = performance.now();
+    }, delay);
+  }
+  function onClick(){
+    if(state==='waiting'){
+      clearTimeout(timeout);
+      api.finish('lose', "(Juda erta bosding, sabr qilishni o'rgan!)");
+      return;
+    }
+    if(state==='go'){
+      const rt = Math.round(performance.now()-startTime);
+      state = 'done';
+      if(rt<=400) api.finish('win', `(Reaksiya vaqting: ${rt}ms — chaqqonsan!)`);
+      else api.finish('lose', `(Reaksiya vaqting: ${rt}ms — juda sekin)`);
+    }
+  }
+  box.addEventListener('mousedown', onClick);
+  box.addEventListener('touchstart', onClick, {passive:true});
+  startRound();
+
+  function stop(){ clearTimeout(timeout); box.removeEventListener('mousedown', onClick); box.removeEventListener('touchstart', onClick); }
+  return { stop };
+}
+
+/* ============ GAME 5: ROCK PAPER SCISSORS ============ */
+function initRPS(container, api){
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div class="rps-score">Sen <b id="rps-p">0</b> : <b id="rps-c">0</b> Kompyuter &nbsp;(3 tagacha)</div>
+      <div class="rps-result" id="rps-result">Birini tanla!</div>
+      <div class="rps-choices">
+        <button class="rps-btn" data-c="tosh">🪨<br>Tosh</button>
+        <button class="rps-btn" data-c="qaychi">✂️<br>Qaychi</button>
+        <button class="rps-btn" data-c="qogoz">📄<br>Qog'oz</button>
+      </div>
+    </div>`;
+  const pEl = container.querySelector('#rps-p');
+  const cEl = container.querySelector('#rps-c');
+  const resEl = container.querySelector('#rps-result');
+  const btns = container.querySelectorAll('.rps-btn');
+  let p=0, c=0, over=false;
+  const beats = { tosh:'qaychi', qaychi:'qogoz', qogoz:'tosh' };
+  const emoji = { tosh:'🪨', qaychi:'✂️', qogoz:'📄' };
+
+  function round(choice){
+    if(over) return;
+    const opts = Object.keys(beats);
+    const comp = opts[Math.floor(Math.random()*3)];
+    let outcome;
+    if(choice===comp) outcome = 'tie';
+    else if(beats[choice]===comp) outcome = 'win';
+    else outcome = 'lose';
+
+    if(outcome==='win'){ p++; pEl.textContent=p; resEl.textContent = `${emoji[choice]} vs ${emoji[comp]} — bu raundni sen yutding!`; }
+    else if(outcome==='lose'){ c++; cEl.textContent=c; resEl.textContent = `${emoji[choice]} vs ${emoji[comp]} — bu raundni kompyuter yutdi!`; }
+    else { resEl.textContent = `${emoji[choice]} vs ${emoji[comp]} — durrang!`; }
+
+    if(p===3){ over=true; api.finish('win', "(3 ta raundni birinchi yutding!)"); }
+    else if(c===3){ over=true; api.finish('lose', "(Kompyuter 3 ta raundni birinchi yutdi)"); }
+  }
+  btns.forEach(b => b.onclick = () => round(b.dataset.c));
+  return { stop(){} };
+}
+
+/* ============ GAME 6: SNAKE ============ */
+function initSnake(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <canvas id="sn-canvas"></canvas>
+      <div class="sn-score">Ochko: <b id="sn-score">0</b> (15 tada g'alaba)</div>
+      <div class="sn-dpad">
+        <div class="sn-dpad-row"><button class="sn-dbtn" data-d="up">↑</button></div>
+        <div class="sn-dpad-row">
+          <button class="sn-dbtn" data-d="left">←</button>
+          <button class="sn-dbtn" data-d="down">↓</button>
+          <button class="sn-dbtn" data-d="right">→</button>
+        </div>
+      </div>
+    </div>`;
+  const canvas = container.querySelector('#sn-canvas');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = container.querySelector('#sn-score');
+  const cellSize = 18;
+  let cols, rows;
+
+  function resize(){
+    cols = Math.floor(container.clientWidth / cellSize);
+    rows = Math.floor(container.clientHeight / cellSize);
+    canvas.width = cols*cellSize;
+    canvas.height = rows*cellSize;
+  }
+  resize();
+
+  let snake, dir, nextDir, food, score, over, interval;
+  function reset(){
+    snake = [{x:Math.floor(cols/2), y:Math.floor(rows/2)}];
+    dir = {x:1,y:0}; nextDir = dir;
+    score = 0; over = false;
+    placeFood();
+    scoreEl.textContent = score;
+  }
+  function placeFood(){
+    food = { x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*rows) };
+  }
+  function setDir(d){
+    if(d==='up' && dir.y===0) nextDir = {x:0,y:-1};
+    else if(d==='down' && dir.y===0) nextDir = {x:0,y:1};
+    else if(d==='left' && dir.x===0) nextDir = {x:-1,y:0};
+    else if(d==='right' && dir.x===0) nextDir = {x:1,y:0};
+  }
+  function onKey(e){
+    const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+    if(map[e.key]){ setDir(map[e.key]); e.preventDefault(); }
+  }
+  window.addEventListener('keydown', onKey);
+  container.querySelectorAll('.sn-dbtn').forEach(b=>{
+    b.addEventListener('touchstart', e=>{ e.preventDefault(); setDir(b.dataset.d); }, {passive:false});
+    b.addEventListener('mousedown', ()=> setDir(b.dataset.d));
+  });
+
+  function tick(){
+    if(over) return;
+    dir = nextDir;
+    const head = { x: snake[0].x+dir.x, y: snake[0].y+dir.y };
+    if(head.x<0 || head.x>=cols || head.y<0 || head.y>=rows || snake.some(s=>s.x===head.x && s.y===head.y)){
+      over = true;
+      clearInterval(interval);
+      if(score>=15) api.finish('win', `(${score} ochko bilan ustasan!)`);
+      else api.finish('lose', `(${score} ochko — devorga yoki o'ziga urilding)`);
+      return;
+    }
+    snake.unshift(head);
+    if(head.x===food.x && head.y===food.y){
+      score++; scoreEl.textContent = score; placeFood();
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+  function draw(){
+    ctx.fillStyle = '#05060a';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#ffd166';
+    ctx.fillRect(food.x*cellSize, food.y*cellSize, cellSize-2, cellSize-2);
+    snake.forEach((s,i)=>{
+      ctx.fillStyle = i===0 ? '#00d9ff' : '#6c5ce7';
+      ctx.fillRect(s.x*cellSize, s.y*cellSize, cellSize-2, cellSize-2);
+    });
+  }
+  reset();
+  draw();
+  interval = setInterval(tick, 140);
+
+  function stop(){ clearInterval(interval); window.removeEventListener('keydown', onKey); }
+  return { stop };
+}
+
+/* ============ GAME 7: CATCH STARS ============ */
+function initCatch(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="cs-hud">Tutilgan: <b id="cs-score">0</b>/15 &nbsp;|&nbsp; O'tkazib yuborilgan: <b id="cs-miss">0</b>/3</div>
+      <canvas id="cs-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#cs-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const scoreEl = container.querySelector('#cs-score');
+  const missEl = container.querySelector('#cs-miss');
+  let basketX = canvas.width/2;
+  const basketW = 70, basketH = 16;
+  let stars = [];
+  let score=0, miss=0, over=false, raf, spawnTimer;
+
+  function spawnStar(){
+    stars.push({ x: Math.random()*(canvas.width-20)+10, y:-10, speed: 2+Math.random()*2+score*0.05 });
+  }
+  function onMove(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    basketX = Math.max(basketW/2, Math.min(canvas.width-basketW/2, x));
+  }
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('touchmove', onMove, {passive:true});
+
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#00d9ff';
+    ctx.fillRect(basketX-basketW/2, canvas.height-30, basketW, basketH);
+
+    stars.forEach(s=>{
+      s.y += s.speed;
+      ctx.fillStyle = '#ffd166';
+      ctx.shadowColor = '#ffd166'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    stars = stars.filter(s=>{
+      if(s.y > canvas.height-30 && s.y < canvas.height-10 && Math.abs(s.x-basketX) < basketW/2){
+        score++; scoreEl.textContent = score;
+        if(score>=15 && !over){ over=true; cleanup(); api.finish('win', `(${score} ta yulduz tutding!)`); }
+        return false;
+      }
+      if(s.y > canvas.height){
+        miss++; missEl.textContent = miss;
+        if(miss>=3 && !over){ over=true; cleanup(); api.finish('lose', `(${miss} tasini o'tkazib yubording)`); }
+        return false;
+      }
+      return true;
+    });
+
+    if(!over) raf = requestAnimationFrame(loop);
+  }
+  spawnTimer = setInterval(spawnStar, 900);
+  loop();
+
+  function cleanup(){
+    cancelAnimationFrame(raf);
+    clearInterval(spawnTimer);
+    window.removeEventListener('resize', resize);
+    canvas.removeEventListener('mousemove', onMove);
+    canvas.removeEventListener('touchmove', onMove);
+  }
+  return { stop: cleanup };
+}
+
+/* ============ GAME 8: GUESS THE NUMBER ============ */
+function initGuess(container, api){
+  const target = Math.floor(Math.random()*100)+1;
+  let attemptsLeft = 7;
+  let over = false;
+  container.innerHTML = `
+    <div class="game-wrap center gn-wrap">
+      <p>1 dan 100 gacha bo'lgan sonni o'yladim. Topib ko'r!</p>
+      <div class="gn-input-row">
+        <input type="number" id="gn-input" min="1" max="100" placeholder="Son...">
+        <button id="gn-btn">Tekshir</button>
+      </div>
+      <div class="gn-hint" id="gn-hint"></div>
+      <div class="gn-attempts">Qolgan urinishlar: <b id="gn-left">${attemptsLeft}</b></div>
+    </div>`;
+  const input = container.querySelector('#gn-input');
+  const btn = container.querySelector('#gn-btn');
+  const hint = container.querySelector('#gn-hint');
+  const leftEl = container.querySelector('#gn-left');
+
+  function guess(){
+    if(over) return;
+    const val = parseInt(input.value);
+    if(!val || val<1 || val>100){ hint.textContent = "1-100 oralig'ida son kirit!"; return; }
+    attemptsLeft--;
+    leftEl.textContent = attemptsLeft;
+    if(val===target){
+      over = true;
+      api.finish('win', `(Sonni ${7-attemptsLeft} ta urinishda topding: ${target}!)`);
+      return;
+    }
+    const diff = Math.abs(val-target);
+    let h;
+    if(diff<=3) h = '🔥🔥 Deyarli yondi!';
+    else if(diff<=10) h = '🔥 Issiq!';
+    else if(diff<=25) h = '🙂 Iliqroq...';
+    else h = '❄️ Juda sovuq!';
+    h += val<target ? ' (Kattaroq son kerak)' : ' (Kichikroq son kerak)';
+    hint.textContent = h;
+
+    if(attemptsLeft<=0 && !over){
+      over = true;
+      api.finish('lose', `(Son ${target} ekan, topolmading)`);
+    }
+    input.value = '';
+    input.focus();
+  }
+  btn.onclick = guess;
+  input.addEventListener('keydown', e => { if(e.key==='Enter') guess(); });
+  return { stop(){} };
+}
+
+/* ============ GAME 9: 2048 ============ */
+function initGame2048(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>2048 gacha yig'!</span><span id="g2-score">Ochko: 0</span></div>
+      <div class="g2-grid" id="g2-grid"></div>
+    </div>`;
+  const gridEl = container.querySelector('#g2-grid');
+  const scoreEl = container.querySelector('#g2-score');
+  let cells, score, over;
+  const size = 4;
+
+  function empty(){ return cells.map((v,i)=>v===0?i:null).filter(i=>i!==null); }
+  function addRandom(){
+    const e = empty();
+    if(!e.length) return;
+    const i = e[Math.floor(Math.random()*e.length)];
+    cells[i] = Math.random()<0.9 ? 2 : 4;
+  }
+  function reset(){ cells = Array(16).fill(0); score = 0; over = false; addRandom(); addRandom(); render(); }
+  function render(){
+    gridEl.innerHTML = '';
+    cells.forEach(v=>{
+      const c = document.createElement('div');
+      c.className = 'g2-cell' + (v ? ' v'+v : '');
+      c.textContent = v || '';
+      gridEl.appendChild(c);
+    });
+    scoreEl.textContent = 'Ochko: ' + score;
+  }
+  function slideRow(row){
+    let arr = row.filter(v=>v!==0);
+    for(let i=0;i<arr.length-1;i++){ if(arr[i]===arr[i+1]){ arr[i]*=2; score+=arr[i]; arr.splice(i+1,1); } }
+    while(arr.length<size) arr.push(0);
+    return arr;
+  }
+  function getRow(r){ return [0,1,2,3].map(c=>cells[r*4+c]); }
+  function setRow(r,arr){ arr.forEach((v,c)=>cells[r*4+c]=v); }
+  function getCol(c){ return [0,1,2,3].map(r=>cells[r*4+c]); }
+  function setCol(c,arr){ arr.forEach((v,r)=>cells[r*4+c]=v); }
+  function canMerge(){
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+      const v = cells[r*4+c];
+      if(c<3 && cells[r*4+c+1]===v) return true;
+      if(r<3 && cells[(r+1)*4+c]===v) return true;
+    }
+    return false;
+  }
+  function move(dir){
+    if(over || !dir) return;
+    const before = cells.slice();
+    if(dir==='left'){ for(let r=0;r<4;r++) setRow(r, slideRow(getRow(r))); }
+    if(dir==='right'){ for(let r=0;r<4;r++) setRow(r, slideRow(getRow(r).reverse()).reverse()); }
+    if(dir==='up'){ for(let c=0;c<4;c++) setCol(c, slideRow(getCol(c))); }
+    if(dir==='down'){ for(let c=0;c<4;c++) setCol(c, slideRow(getCol(c).reverse()).reverse()); }
+    const changed = cells.some((v,i)=>v!==before[i]);
+    if(changed){
+      addRandom(); render();
+      if(cells.some(v=>v>=2048) && !over){ over=true; api.finish('win', `(${score} ochko bilan 2048 ga yetding!)`); return; }
+      if(!empty().length && !canMerge()){ over=true; api.finish('lose', `(${score} ochko — joy qolmadi)`); }
+    }
+  }
+  function onKey(e){
+    const map = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' };
+    if(map[e.key]){ move(map[e.key]); e.preventDefault(); }
+  }
+  window.addEventListener('keydown', onKey);
+  let sx, sy;
+  function ts(e){ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+  function te(e){
+    const dx = e.changedTouches[0].clientX-sx, dy = e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>Math.abs(dy)) move(dx>30?'right':dx<-30?'left':null);
+    else move(dy>30?'down':dy<-30?'up':null);
+  }
+  gridEl.addEventListener('touchstart', ts, {passive:true});
+  gridEl.addEventListener('touchend', te, {passive:true});
+  reset();
+  function stop(){ window.removeEventListener('keydown', onKey); gridEl.removeEventListener('touchstart', ts); gridEl.removeEventListener('touchend', te); }
+  return { stop };
+}
+
+/* ============ GAME 10: PING-PONG ============ */
+function initPong(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Sen</span><span id="pg-score">0 : 0</span><span>Kompyuter</span></div>
+      <canvas id="pg-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#pg-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const scoreEl = container.querySelector('#pg-score');
+
+  const paddleH = 70, paddleW = 10;
+  let py = canvas.height/2-paddleH/2, ay = canvas.height/2-paddleH/2;
+  let bx, by, bvx, bvy, ps=0, as=0, over=false, raf;
+
+  function onMove(e){
+    const rect = canvas.getBoundingClientRect();
+    const y = (e.touches ? e.touches[0].clientY : e.clientY)-rect.top;
+    py = Math.max(0, Math.min(canvas.height-paddleH, y-paddleH/2));
+  }
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('touchmove', onMove, {passive:true});
+
+  function resetBall(){ bx=canvas.width/2; by=canvas.height/2; bvx=(Math.random()<0.5?-1:1)*4; bvy=(Math.random()*4-2); }
+  function loop(){
+    const target = by-paddleH/2;
+    ay += (target-ay)*0.08;
+    ay = Math.max(0, Math.min(canvas.height-paddleH, ay));
+    bx += bvx; by += bvy;
+    if(by<0 || by>canvas.height) bvy*=-1;
+    if(bx<30 && bx>16 && by>py && by<py+paddleH){ bvx=Math.abs(bvx); bx=31; }
+    if(bx>canvas.width-30 && bx<canvas.width-16 && by>ay && by<ay+paddleH){ bvx=-Math.abs(bvx); bx=canvas.width-31; }
+    if(bx<0){ as++; scoreEl.textContent=ps+' : '+as; resetBall(); if(as>=5 && !over){ over=true; finishGame(false); } }
+    if(bx>canvas.width){ ps++; scoreEl.textContent=ps+' : '+as; resetBall(); if(ps>=5 && !over){ over=true; finishGame(true); } }
+
+    ctx.fillStyle='#05060a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#00d9ff'; ctx.fillRect(20,py,paddleW,paddleH);
+    ctx.fillStyle='#ff3cac'; ctx.fillRect(canvas.width-30,ay,paddleW,paddleH);
+    ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.arc(bx,by,7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.setLineDash([6,8]);
+    ctx.beginPath(); ctx.moveTo(canvas.width/2,0); ctx.lineTo(canvas.width/2,canvas.height); ctx.stroke(); ctx.setLineDash([]);
+    if(!over) raf = requestAnimationFrame(loop);
+  }
+  function finishGame(won){
+    cancelAnimationFrame(raf);
+    if(won) api.finish('win', `(${ps}:${as} hisobida g'alaba!)`);
+    else api.finish('lose', `(${ps}:${as} hisobida mag'lubiyat)`);
+  }
+  resetBall(); loop();
+  function stop(){ cancelAnimationFrame(raf); window.removeEventListener('resize', resize); canvas.removeEventListener('mousemove', onMove); canvas.removeEventListener('touchmove', onMove); }
+  return { stop };
+}
+
+/* ============ GAME 11: AIM TRAINER ============ */
+function initAim(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Nishonlar: <b id="am-hits">0</b>/10</span><span id="am-timer">20.0s</span></div>
+      <canvas id="am-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#am-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=container.clientWidth; canvas.height=container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const hitsEl = container.querySelector('#am-hits');
+  const timerEl = container.querySelector('#am-timer');
+  let target=null, hits=0, timeLeft=20, over=false, raf, timerInt, spawnTimeout;
+  const R = 26;
+
+  function spawn(){
+    target = { x: R+Math.random()*(canvas.width-2*R), y: R+Math.random()*(canvas.height-2*R), born: performance.now() };
+    spawnTimeout = setTimeout(()=>{ if(!over){ target=null; spawn(); } }, 1100);
+  }
+  function onClick(e){
+    if(over || !target) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX)-rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY)-rect.top;
+    if(Math.hypot(x-target.x, y-target.y)<=R){
+      hits++; hitsEl.textContent = hits;
+      clearTimeout(spawnTimeout); target=null;
+      if(hits>=10 && !over){ over=true; finishGame(true); return; }
+      spawn();
+    }
+  }
+  canvas.addEventListener('mousedown', onClick);
+  canvas.addEventListener('touchstart', onClick, {passive:true});
+
+  function loop(){
+    ctx.fillStyle='#05060a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(target){
+      const age = (performance.now()-target.born)/1100;
+      ctx.globalAlpha = 1-age*0.3;
+      const grad = ctx.createRadialGradient(target.x,target.y,0,target.x,target.y,R);
+      grad.addColorStop(0,'#ff3cac'); grad.addColorStop(1,'#6c5ce7');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(target.x,target.y,R*(1-age*0.15),0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    if(!over) raf = requestAnimationFrame(loop);
+  }
+  timerInt = setInterval(()=>{
+    timeLeft -= 0.1;
+    timerEl.textContent = Math.max(timeLeft,0).toFixed(1)+'s';
+    if(timeLeft<=0 && !over){ over=true; finishGame(false); }
+  }, 100);
+  function finishGame(won){
+    cancelAnimationFrame(raf); clearInterval(timerInt); clearTimeout(spawnTimeout);
+    if(won) api.finish('win', `(${hits} ta nishonni urding!)`);
+    else api.finish('lose', `(faqat ${hits}/10 nishon urding)`);
+  }
+  spawn(); loop();
+  function stop(){ cancelAnimationFrame(raf); clearInterval(timerInt); clearTimeout(spawnTimeout); window.removeEventListener('resize', resize); canvas.removeEventListener('mousedown', onClick); canvas.removeEventListener('touchstart', onClick); }
+  return { stop };
+}
+
+/* ============ GAME 12: FLAPPY ============ */
+function initFlappy(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Ochko: <b id="fl-score">0</b>/10</span><span>Bosib uch!</span></div>
+      <canvas id="fl-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#fl-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=container.clientWidth; canvas.height=container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const scoreEl = container.querySelector('#fl-score');
+  let birdY, birdV, pipes, score, over, raf, spawnTimer;
+  const gravity=0.4, flap=-7, gap=150, pipeW=50, pipeSpeed=3;
+
+  function reset(){ birdY=canvas.height/2; birdV=0; pipes=[]; score=0; over=false; scoreEl.textContent=score; }
+  function doFlap(){ if(!over) birdV = flap; }
+  function onKey(e){ if(e.code==='Space'){ doFlap(); e.preventDefault(); } }
+  function onTouch(e){ e.preventDefault(); doFlap(); }
+  window.addEventListener('keydown', onKey);
+  canvas.addEventListener('mousedown', doFlap);
+  canvas.addEventListener('touchstart', onTouch, {passive:false});
+
+  function spawnPipe(){
+    const top = 40+Math.random()*(canvas.height-gap-80);
+    pipes.push({x:canvas.width, top, passed:false});
+  }
+  spawnTimer = setInterval(()=>{ if(!over) spawnPipe(); }, 1600);
+
+  function loop(){
+    birdV += gravity; birdY += birdV;
+    pipes.forEach(p=> p.x -= pipeSpeed);
+    pipes = pipes.filter(p=>p.x>-pipeW);
+    const birdX=60, birdR=10;
+    if(birdY-birdR<0 || birdY+birdR>canvas.height){ endGame(false); return; }
+    pipes.forEach(p=>{
+      if(birdX+birdR>p.x && birdX-birdR<p.x+pipeW){
+        if(birdY-birdR<p.top || birdY+birdR>p.top+gap){ endGame(false); }
+      }
+      if(!p.passed && p.x+pipeW<birdX){ p.passed=true; score++; scoreEl.textContent=score; if(score>=10){ endGame(true); } }
+    });
+    if(over) return;
+    ctx.fillStyle='#05060a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#2ecc71';
+    pipes.forEach(p=>{ ctx.fillRect(p.x,0,pipeW,p.top); ctx.fillRect(p.x,p.top+gap,pipeW,canvas.height-p.top-gap); });
+    ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.arc(birdX,birdY,birdR,0,Math.PI*2); ctx.fill();
+    raf = requestAnimationFrame(loop);
+  }
+  function endGame(won){
+    if(over) return;
+    over=true; cancelAnimationFrame(raf); clearInterval(spawnTimer);
+    if(won) api.finish('win', `(${score} ta to'siqdan o'tding!)`);
+    else api.finish('lose', `(${score} ochko bilan yiqilding)`);
+  }
+  reset(); loop();
+  function stop(){ cancelAnimationFrame(raf); clearInterval(spawnTimer); window.removeEventListener('keydown', onKey); window.removeEventListener('resize', resize); canvas.removeEventListener('mousedown', doFlap); canvas.removeEventListener('touchstart', onTouch); }
+  return { stop };
+}
+
+/* ============ GAME 13: BREAKOUT ============ */
+function initBreakout(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Jonlar: <b id="bo-lives">3</b></span><span>G'ishtlar: <b id="bo-bricks">0</b></span></div>
+      <canvas id="bo-canvas"></canvas>
+    </div>`;
+  const canvas = container.querySelector('#bo-canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=container.clientWidth; canvas.height=container.clientHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const livesEl = container.querySelector('#bo-lives');
+  const bricksEl = container.querySelector('#bo-bricks');
+
+  const paddleW=80, paddleH=12;
+  let paddleX = canvas.width/2-paddleW/2;
+  let ballX=canvas.width/2, ballY=canvas.height-40, ballVX=3, ballVY=-3, ballR=6;
+  let lives=3, over=false, raf, bricks=[];
+  const cols=7, rowsN=4, brickW=Math.floor(canvas.width/cols)-6, brickH=18;
+
+  function setupBricks(){
+    bricks = [];
+    for(let r=0;r<rowsN;r++) for(let c=0;c<cols;c++) bricks.push({x:c*(brickW+6)+3, y:r*(brickH+6)+40, w:brickW, h:brickH, alive:true});
+    bricksEl.textContent = bricks.length;
+  }
+  setupBricks();
+
+  function onMove(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX)-rect.left;
+    paddleX = Math.max(0, Math.min(canvas.width-paddleW, x-paddleW/2));
+  }
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('touchmove', onMove, {passive:true});
+
+  function loop(){
+    ballX += ballVX; ballY += ballVY;
+    if(ballX<ballR || ballX>canvas.width-ballR) ballVX*=-1;
+    if(ballY<ballR) ballVY*=-1;
+    if(ballY>canvas.height-20-paddleH && ballY<canvas.height-20 && ballX>paddleX && ballX<paddleX+paddleW){
+      ballVY=-Math.abs(ballVY);
+      ballVX = ((ballX-(paddleX+paddleW/2))/(paddleW/2))*4;
+    }
+    if(ballY>canvas.height){
+      lives--; livesEl.textContent = lives;
+      if(lives<=0){ endGame(false); return; }
+      ballX=canvas.width/2; ballY=canvas.height-40; ballVX=3; ballVY=-3;
+    }
+    let aliveCount=0;
+    bricks.forEach(b=>{
+      if(!b.alive) return;
+      aliveCount++;
+      if(ballX+ballR>b.x && ballX-ballR<b.x+b.w && ballY+ballR>b.y && ballY-ballR<b.y+b.h){ b.alive=false; ballVY*=-1; aliveCount--; }
+    });
+    bricksEl.textContent = aliveCount;
+    if(aliveCount===0){ endGame(true); return; }
+
+    ctx.fillStyle='#05060a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    const colors=['#00d9ff','#6c5ce7','#ff3cac','#ffd166'];
+    bricks.forEach((b,i)=>{ if(b.alive){ ctx.fillStyle=colors[Math.floor(i/cols)%colors.length]; ctx.fillRect(b.x,b.y,b.w,b.h); } });
+    ctx.fillStyle='#e8ecf9'; ctx.fillRect(paddleX,canvas.height-20,paddleW,paddleH);
+    ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.arc(ballX,ballY,ballR,0,Math.PI*2); ctx.fill();
+    raf = requestAnimationFrame(loop);
+  }
+  function endGame(won){
+    if(over) return;
+    over=true; cancelAnimationFrame(raf);
+    if(won) api.finish('win', "(Barcha g'ishtlarni buzding!)");
+    else api.finish('lose', "(Jonlar tugadi)");
+  }
+  loop();
+  function stop(){ cancelAnimationFrame(raf); window.removeEventListener('resize', resize); canvas.removeEventListener('mousemove', onMove); canvas.removeEventListener('touchmove', onMove); }
+  return { stop };
+}
+
+/* ============ GAME 14: WORDLE ============ */
+function initWordle(container, api){
+  const words = ['QALAM','KATTA','DARYO','BAHOR','OLTIN','TARIX','YOZUV','SABZI'];
+  const answer = words[Math.floor(Math.random()*words.length)];
+  let attempts = [];
+  let over = false;
+  const maxAttempts = 6;
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <p style="color:var(--dim);font-size:13px;">5 harfli o'zbekcha so'zni ${maxAttempts} urinishda top!</p>
+      <div class="wd-grid" id="wd-grid"></div>
+      <div class="gn-input-row">
+        <input type="text" id="wd-input" maxlength="5" placeholder="So'z..." style="text-transform:uppercase;">
+        <button id="wd-btn">Tekshir</button>
+      </div>
+      <div class="gn-hint" id="wd-hint" style="font-size:12px;color:var(--dim);">🟩 to'g'ri joyda &nbsp; 🟨 so'zda bor &nbsp; ⬜ yo'q</div>
+    </div>`;
+  const grid = container.querySelector('#wd-grid');
+  const input = container.querySelector('#wd-input');
+  const btn = container.querySelector('#wd-btn');
+  const hint = container.querySelector('#wd-hint');
+
+  function render(){
+    grid.innerHTML = '';
+    for(let r=0;r<maxAttempts;r++){
+      const row = document.createElement('div');
+      row.className = 'wd-row';
+      const g = attempts[r];
+      for(let c=0;c<5;c++){
+        const cell = document.createElement('div');
+        cell.className = 'wd-cell';
+        if(g){ cell.textContent = g.letters[c]; cell.classList.add(g.state[c]); }
+        row.appendChild(cell);
+      }
+      grid.appendChild(row);
+    }
+  }
+  function evaluate(word){
+    const letters = word.split('');
+    const state = Array(5).fill('gray');
+    const ansArr = answer.split('');
+    const used = Array(5).fill(false);
+    for(let i=0;i<5;i++){ if(letters[i]===ansArr[i]){ state[i]='green'; used[i]=true; } }
+    for(let i=0;i<5;i++){
+      if(state[i]==='green') continue;
+      const idx = ansArr.findIndex((l,j)=>l===letters[i] && !used[j]);
+      if(idx!==-1){ state[i]='yellow'; used[idx]=true; }
+    }
+    return { letters, state };
+  }
+  function submit(){
+    if(over) return;
+    const val = input.value.toUpperCase().trim();
+    if(val.length!==5){ hint.textContent = "Aynan 5 ta harf kirit!"; return; }
+    attempts.push(evaluate(val));
+    render();
+    input.value = '';
+    if(val===answer){ over=true; api.finish('win', `(So'zni ${attempts.length}-urinishda topding: ${answer})`); return; }
+    if(attempts.length>=maxAttempts){ over=true; api.finish('lose', `(So'z "${answer}" ekan)`); return; }
+    hint.textContent = "🟩 to'g'ri joyda  🟨 so'zda bor  ⬜ yo'q";
+  }
+  btn.onclick = submit;
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  render();
+  return { stop(){} };
+}
+
+/* ============ GAME 15: QUICK MATH ============ */
+function initMath(container, api){
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div style="display:flex;gap:20px;font-size:14px;color:var(--dim);"><span>To'g'ri: <b id="mh-correct" style="color:var(--gold);">0</b>/8</span><span id="mh-timer">30.0s</span></div>
+      <div id="mh-problem" style="font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,6vw,44px);font-weight:700;"></div>
+      <div class="gn-input-row">
+        <input type="number" id="mh-input" placeholder="Javob...">
+        <button id="mh-btn">Tekshir</button>
+      </div>
+    </div>`;
+  const probEl = container.querySelector('#mh-problem');
+  const input = container.querySelector('#mh-input');
+  const btn = container.querySelector('#mh-btn');
+  const correctEl = container.querySelector('#mh-correct');
+  const timerEl = container.querySelector('#mh-timer');
+  let correct=0, over=false, timeLeft=30, answer, timerInt;
+
+  function newProblem(){
+    const ops = ['+','-','×'];
+    const op = ops[Math.floor(Math.random()*3)];
+    let a,b;
+    if(op==='×'){ a=Math.floor(Math.random()*12)+1; b=Math.floor(Math.random()*12)+1; answer=a*b; }
+    else { a=Math.floor(Math.random()*50)+1; b=Math.floor(Math.random()*50)+1; answer = op==='+'? a+b : a-b; }
+    probEl.textContent = `${a} ${op} ${b} = ?`;
+  }
+  function submit(){
+    if(over) return;
+    if(parseInt(input.value)===answer){
+      correct++; correctEl.textContent = correct;
+      if(correct>=8){ over=true; finishGame(true); return; }
+    }
+    input.value = '';
+    newProblem();
+  }
+  btn.onclick = submit;
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  timerInt = setInterval(()=>{
+    timeLeft -= 0.1;
+    timerEl.textContent = Math.max(timeLeft,0).toFixed(1)+'s';
+    if(timeLeft<=0 && !over){ over=true; finishGame(false); }
+  }, 100);
+  function finishGame(won){
+    clearInterval(timerInt);
+    if(won) api.finish('win', `(${correct} ta misolni to'g'ri yechding!)`);
+    else api.finish('lose', `(faqat ${correct}/8 to'g'ri javob berding)`);
+  }
+  newProblem();
+  function stop(){ clearInterval(timerInt); }
+  return { stop };
+}
+
+/* ============ GAME 16: COLOR DIFF ============ */
+function initColorDiff(container, api){
+  container.innerHTML = `
+    <div class="game-wrap">
+      <div class="hud-bar"><span>Bosqich: <b id="cd-round">1</b>/5</span><span id="cd-timer">5.0s</span></div>
+      <div class="cd-grid" id="cd-grid"></div>
+    </div>`;
+  const grid = container.querySelector('#cd-grid');
+  const roundEl = container.querySelector('#cd-round');
+  const timerEl = container.querySelector('#cd-timer');
+  let round=1, over=false, timerInt, timeLeft;
+
+  function startRound(){
+    timeLeft = 5;
+    roundEl.textContent = round;
+    const count = 4+round*3;
+    const diff = 28-round*4;
+    const hue = Math.floor(Math.random()*360);
+    const oddIndex = Math.floor(Math.random()*count);
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(count))},1fr)`;
+    for(let i=0;i<count;i++){
+      const sq = document.createElement('button');
+      sq.className = 'cd-swatch';
+      const l = i===oddIndex ? 45+diff : 45;
+      sq.style.background = `hsl(${hue},55%,${l}%)`;
+      sq.onclick = () => pick(i===oddIndex);
+      grid.appendChild(sq);
+    }
+    clearInterval(timerInt);
+    timerInt = setInterval(()=>{
+      timeLeft -= 0.1;
+      timerEl.textContent = Math.max(timeLeft,0).toFixed(1)+'s';
+      if(timeLeft<=0 && !over){ over=true; clearInterval(timerInt); api.finish('lose', `(${round}-bosqichda vaqt tugadi)`); }
+    }, 100);
+  }
+  function pick(correct){
+    if(over) return;
+    clearInterval(timerInt);
+    if(correct){
+      if(round>=5){ over=true; api.finish('win', "(Barcha 5 bosqichni topding!)"); return; }
+      round++; startRound();
+    } else { over=true; api.finish('lose', `(${round}-bosqichda xato bosding)`); }
+  }
+  startRound();
+  function stop(){ clearInterval(timerInt); }
+  return { stop };
+}
+
+/* ============ GAME 17: BLACKJACK (21) ============ */
+function initBlackjack(container, api){
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div>
+        <div>Diler: <span id="bj-dealer-score">?</span></div>
+        <div class="bj-cards" id="bj-dealer-cards"></div>
+        <div style="margin-top:14px;">Sen: <span id="bj-player-score">0</span></div>
+        <div class="bj-cards" id="bj-player-cards"></div>
+      </div>
+      <div class="bj-actions">
+        <button id="bj-hit" class="rps-btn">🃏 Yana kart</button>
+        <button id="bj-stand" class="rps-btn">✋ To'xtash</button>
+      </div>
+    </div>`;
+  const dealerCardsEl = container.querySelector('#bj-dealer-cards');
+  const playerCardsEl = container.querySelector('#bj-player-cards');
+  const dealerScoreEl = container.querySelector('#bj-dealer-score');
+  const playerScoreEl = container.querySelector('#bj-player-score');
+  const hitBtn = container.querySelector('#bj-hit');
+  const standBtn = container.querySelector('#bj-stand');
+  const suits = ['♠','♥','♦','♣'];
+  const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  function newDeck(){ const d=[]; suits.forEach(s=>ranks.forEach(r=>d.push({r,s}))); return d.sort(()=>Math.random()-0.5); }
+  function value(hand){
+    let total=0, aces=0;
+    hand.forEach(c=>{ if(c.r==='A'){ total+=11; aces++; } else if(['J','Q','K'].includes(c.r)) total+=10; else total+=parseInt(c.r); });
+    while(total>21 && aces>0){ total-=10; aces--; }
+    return total;
+  }
+  let deck = newDeck();
+  let player = [deck.pop(), deck.pop()];
+  let dealer = [deck.pop(), deck.pop()];
+  let over = false;
+  function renderCard(c){ return `<div class="bj-card">${c.r}${c.s}</div>`; }
+  function render(hideDealer){
+    playerCardsEl.innerHTML = player.map(renderCard).join('');
+    playerScoreEl.textContent = value(player);
+    if(hideDealer){ dealerCardsEl.innerHTML = renderCard(dealer[0])+'<div class="bj-card">🂠</div>'; dealerScoreEl.textContent = '?'; }
+    else { dealerCardsEl.innerHTML = dealer.map(renderCard).join(''); dealerScoreEl.textContent = value(dealer); }
+  }
+  function endRound(){
+    over = true; hitBtn.disabled = true; standBtn.disabled = true;
+    const pv = value(player);
+    if(pv>21){ render(false); api.finish('lose', `(Sen 21 dan oshib ketding: ${pv})`); return; }
+    let dealerVal = value(dealer);
+    while(dealerVal<17){ dealer.push(deck.pop()); dealerVal = value(dealer); }
+    render(false);
+    if(dealerVal>21){ api.finish('win', `(Diler 21 dan oshdi: ${dealerVal})`); return; }
+    if(pv>dealerVal) api.finish('win', `(${pv} vs ${dealerVal})`);
+    else if(pv<dealerVal) api.finish('lose', `(${pv} vs ${dealerVal})`);
+    else api.finish('draw', `(Ikkalasi ham ${dealerVal})`);
+  }
+  hitBtn.onclick = () => { if(over) return; player.push(deck.pop()); render(true); if(value(player)>21) endRound(); };
+  standBtn.onclick = () => { if(!over) endRound(); };
+  render(true);
+  return { stop(){} };
+}
+
+/* ============ GAME 18: LIE DETECTOR (funny) ============ */
+function initLieDetector(container, api){
+  const questions = [
+    "Sen hech qachon uxlab qolib darsga kechikkanmisan?",
+    "Sen hech qachon ovqatni yashirincha yeb qo'yganmisan?",
+    "Sen hech qachon \"men uydaman\" deb yolg'on gapirganmisan?",
+    "Sen hech qachon biror narsani sindirib, \"shunday edi\" deganmisan?",
+    "Sen hech qachon do'stingning sirini oshkor qilganmisan?"
+  ];
+  let idx = 0, over = false;
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div style="font-size:13px;color:var(--dim);">Savol <span id="ld-num">1</span>/${questions.length}</div>
+      <div id="ld-question" style="font-size:clamp(16px,3vw,20px);font-weight:600;max-width:420px;"></div>
+      <div class="rps-choices">
+        <button class="rps-btn" id="ld-yes">✅ Ha</button>
+        <button class="rps-btn" id="ld-no">❌ Yo'q</button>
+      </div>
+    </div>`;
+  const qEl = container.querySelector('#ld-question');
+  const numEl = container.querySelector('#ld-num');
+  function showQ(){ qEl.textContent = questions[idx]; numEl.textContent = idx+1; }
+  function answer(){
+    if(over) return;
+    idx++;
+    if(idx>=questions.length){
+      over = true;
+      const pct = Math.floor(Math.random()*100)+1;
+      if(pct>=50) api.finish('lose', `(Yolg'on detektor darajasi: ${pct}% — sen yolg'onchisan! 🤥)`);
+      else api.finish('win', `(Rostgo'ylik darajasi: ${100-pct}% — senga ishonsa bo'ladi! 😇)`);
+      return;
+    }
+    showQ();
+  }
+  container.querySelector('#ld-yes').onclick = answer;
+  container.querySelector('#ld-no').onclick = answer;
+  showQ();
+  return { stop(){} };
+}
+
+/* ============ GAME 19: WHEEL OF FORTUNE (funny) ============ */
+function initWheel(container, api){
+  const segments = [
+    { text:"Bugun hamma senga yaxshi kayfiyatda duch keladi!", win:true },
+    { text:"Telefoning batareyasi doim 1%da qoladi 😅", win:false },
+    { text:"Kutilmagan sovg'a olasan!", win:true },
+    { text:"Bugun Wi-Fi sekin ishlaydi", win:false },
+    { text:"Sevimli taomingni yeysan!", win:true },
+    { text:"Ertaga soyabon unutasan", win:false },
+    { text:"Omad butun kun sen tarafda!", win:true },
+    { text:"Kimdir sendan pul so'raydi 😂", win:false },
+  ];
+  const n = segments.length;
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div class="wheel-wrap"><div class="wheel-pointer">▼</div><div class="wheel" id="wheel"></div></div>
+      <button class="rps-btn" id="spin-btn">🎡 Aylantirish</button>
+    </div>`;
+  const wheel = container.querySelector('#wheel');
+  const spinBtn = container.querySelector('#spin-btn');
+  const colors = ['#00d9ff','#6c5ce7','#ff3cac','#ffd166'];
+  const seg = 360/n;
+  wheel.style.background = `conic-gradient(${segments.map((s,i)=>`${colors[i%colors.length]} ${i*seg}deg ${(i+1)*seg}deg`).join(',')})`;
+  let spinning = false;
+  let timeoutId;
+  spinBtn.onclick = () => {
+    if(spinning) return;
+    spinning = true;
+    const chosen = Math.floor(Math.random()*n);
+    const rotation = 360*5 + (360-(chosen*seg+seg/2));
+    wheel.style.transition = 'transform 3.5s cubic-bezier(0.2,0.8,0.2,1)';
+    wheel.style.transform = `rotate(${rotation}deg)`;
+    timeoutId = setTimeout(()=>{
+      const s = segments[chosen];
+      if(s.win) api.finish('win', `("${s.text}")`);
+      else api.finish('lose', `("${s.text}")`);
+    }, 3600);
+  };
+  function stop(){ clearTimeout(timeoutId); }
+  return { stop };
+}
+
+/* ============ GAME 20: BUTTON MASH ============ */
+function initMash(container, api){
+  container.innerHTML = `
+    <div class="game-wrap center">
+      <div style="font-size:14px;color:var(--dim);">5 soniyada 30 marta bos!</div>
+      <div id="mash-count" style="font-family:'Space Grotesk',sans-serif;font-size:64px;font-weight:700;color:var(--gold);">0</div>
+      <div id="mash-timer" style="font-size:16px;">5.0s</div>
+      <button id="mash-btn" class="mash-btn">BOS! 👊</button>
+    </div>`;
+  const countEl = container.querySelector('#mash-count');
+  const timerEl = container.querySelector('#mash-timer');
+  const btn = container.querySelector('#mash-btn');
+  let clicks=0, timeLeft=5, over=false, started=false, timerInt;
+  function start(){
+    if(started) return;
+    started = true;
+    timerInt = setInterval(()=>{
+      timeLeft -= 0.1;
+      timerEl.textContent = Math.max(timeLeft,0).toFixed(1)+'s';
+      if(timeLeft<=0 && !over){
+        over = true; clearInterval(timerInt);
+        if(clicks>=30) api.finish('win', `(${clicks} marta bosding!)`);
+        else api.finish('lose', `(faqat ${clicks} marta bosding, 30 kerak edi)`);
+      }
+    }, 100);
+  }
+  function onClick(){ if(over) return; start(); clicks++; countEl.textContent = clicks; }
+  function onTouch(e){ e.preventDefault(); onClick(); }
+  btn.addEventListener('mousedown', onClick);
+  btn.addEventListener('touchstart', onTouch, {passive:false});
+  function stop(){ clearInterval(timerInt); }
+  return { stop };
+}
+
+/* ============ Game registry ============ */
+const GAMES = [
+  { id:'supernova', title:'Supernova', emoji:'💥', desc:"20 soniyada bos-bos yulduz portlat, 350 ochko top", init:initSupernova },
+  { id:'tictactoe', title:"X-O O'yini", emoji:'❌⭕', desc:"Kompyuterga qarshi klassik X-O jangi", init:initTicTacToe },
+  { id:'memory', title:"Xotira O'yini", emoji:'🧠', desc:"Juftlarni top, lekin yurishlar cheklangan", init:initMemory },
+  { id:'reaction', title:'Tezkorlik Testi', emoji:'⚡', desc:"Yashil yonganda bos — refleksingni sina", init:initReaction },
+  { id:'rps', title:"Tosh-Qaychi-Qog'oz", emoji:'✂️', desc:"Kompyuterni 3 marta yutib chiq", init:initRPS },
+  { id:'snake', title:'Ilon', emoji:'🐍', desc:"Ilonni boshqar, o'ziga urilib qolma", init:initSnake },
+  { id:'catch', title:'Yulduz Tutish', emoji:'🌟', desc:"Tushayotgan yulduzlarni savatchada tut", init:initCatch },
+  { id:'guess', title:'Raqamni Top', emoji:'🔢', desc:"1-100 orasidan sonni 7 urinishda top", init:initGuess },
+  { id:'game2048', title:'2048', emoji:'🧩', desc:"Raqamlarni birlashtirib 2048 ga yet", init:initGame2048 },
+  { id:'pong', title:'Ping-Pong', emoji:'🏓', desc:"Kompyuterga qarshi klassik ping-pong", init:initPong },
+  { id:'aim', title:'Nishonga Ur', emoji:'🎯', desc:"20 soniyada 10 ta nishonni ur", init:initAim },
+  { id:'flappy', title:'Uchuvchi Qush', emoji:'🐦', desc:"Bosib uch, to'siqlardan o'tib ket", init:initFlappy },
+  { id:'breakout', title:"G'isht Buzish", emoji:'🧱', desc:"To'p bilan barcha g'ishtlarni buz", init:initBreakout },
+  { id:'wordle', title:"So'z Toping", emoji:'🔤', desc:"5 harfli o'zbekcha so'zni 6 urinishda top", init:initWordle },
+  { id:'math', title:'Tez Hisoblash', emoji:'🧮', desc:"30 soniyada 8 ta misolni yech", init:initMath },
+  { id:'colordiff', title:'Ranglarni Farqla', emoji:'🎨', desc:"Boshqacha rangni tez top, 5 bosqich", init:initColorDiff },
+  { id:'blackjack', title:'21 (Blackjack)', emoji:'🃏', desc:"Dilerga qarshi 21 ga yaqinlash", init:initBlackjack },
+  { id:'lie', title:"Yolg'on Detektor", emoji:'🤥', desc:"5 ta savolga javob ber, natija kulgili!", init:initLieDetector },
+  { id:'wheel', title:"Baxt G'ildiragi", emoji:'🎡', desc:"Aylantir va kulgili taqdiringni bil", init:initWheel },
+  { id:'mash', title:'Tugma Urish', emoji:'👊', desc:"5 soniyada 30 marta bos, tezligingni sina", init:initMash },
+];
+</script>
+</body>
+</html>
