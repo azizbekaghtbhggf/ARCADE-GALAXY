@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="p8Tn2yZcQZjRkhrdUpZZy-MCsjJhe9EavB7dqEyEAv4" />
 <title>ARCADE GALAXY — O'yinlar Olami</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -234,6 +235,23 @@
   .no-cell{ background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.15); border-radius:10px; font-weight:700; font-size:16px; color:var(--star); }
   .no-cell.done{ background:rgba(46,204,113,0.3); border-color:var(--green); opacity:0.5; }
 
+  /* ---------- Admin panel sections ---------- */
+  .admin-section{ border:1px solid rgba(232,236,249,0.1); border-radius:14px; padding:14px; margin-top:14px; }
+  .admin-section-title{ font-size:13px; font-weight:600; color:var(--star); margin-bottom:10px; }
+  .admin-mini-btn{ background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.2); color:var(--star); padding:8px 12px; border-radius:10px; font-size:12px; flex:1; }
+  .admin-mini-btn:hover{ border-color:var(--cyan); }
+  .admin-game-row{ display:flex; align-items:center; gap:8px; padding:8px 4px; border-bottom:1px solid rgba(232,236,249,0.08); }
+  .admin-game-row input[type="checkbox"]{ width:18px; height:18px; flex-shrink:0; }
+  .admin-game-row span{ font-size:13px; flex:1; }
+  .admin-order-btn{ background:rgba(255,255,255,0.06); border:1px solid rgba(232,236,249,0.15); color:var(--star); width:26px; height:26px; border-radius:6px; font-size:12px; flex-shrink:0; }
+  .admin-order-btn:hover{ border-color:var(--cyan); }
+  .admin-stat-row{ display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid rgba(232,236,249,0.06); }
+  #announcement-banner{
+    max-width:900px; width:100%; margin:0 auto 18px; padding:10px 18px; border-radius:14px;
+    background:linear-gradient(135deg,rgba(0,217,255,0.12),rgba(108,92,231,0.12)); border:1px solid rgba(0,217,255,0.25);
+    text-align:center; font-size:13px; color:var(--star);
+  }
+
   /* ---------- Result modal ---------- */
   .modal-overlay{
     position:fixed; inset:0; background:rgba(5,6,10,0.75); backdrop-filter:blur(6px);
@@ -267,12 +285,31 @@
 
 <canvas id="bgstars"></canvas>
 
-<!-- ADMIN BUTTON -->
-<button id="admin-toggle-btn" title="Admin panel" style="position:fixed;top:16px;right:16px;z-index:40;background:rgba(255,255,255,0.06);border:1px solid rgba(232,236,249,0.15);color:var(--star);width:42px;height:42px;border-radius:12px;font-size:18px;">⚙️</button>
+<!-- SETTINGS BUTTON (draggable) -->
+<button id="settings-toggle-btn" title="Sozlamalar (sudrab ko'chiring)" style="position:fixed;top:16px;left:16px;z-index:40;background:rgba(255,255,255,0.06);border:1px solid rgba(232,236,249,0.15);color:var(--star);width:42px;height:42px;border-radius:12px;font-size:18px;touch-action:none;cursor:grab;">🔊</button>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-title" style="font-size:22px;">🔊 Sozlamalar</div>
+    <div style="text-align:left;margin:18px 0;">
+      <label style="font-size:13px;color:var(--dim);display:block;margin-bottom:8px;">Ovoz balandligi: <span id="volume-value" style="color:var(--gold);">70%</span></label>
+      <input type="range" id="volume-slider" min="0" max="100" value="70" style="width:100%;accent-color:var(--cyan);">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;cursor:pointer;">
+        <input type="checkbox" id="mute-toggle" style="width:18px;height:18px;"> Ovozni butunlay o'chirish
+      </label>
+      <p style="font-size:11px;color:var(--dim);margin-top:14px;">💡 Ikkala tugma (🔊 va ⚙️) ni sudrab ekranning istalgan joyiga qo'yishingiz mumkin.</p>
+    </div>
+    <div class="modal-actions"><button id="settingsCloseBtn" style="background:rgba(255,255,255,0.08);color:var(--star);border:1px solid rgba(232,236,249,0.2);">Yopish</button></div>
+  </div>
+</div>
+
+<!-- ADMIN BUTTON (draggable) -->
+<button id="admin-toggle-btn" title="Admin panel (sudrab ko'chiring)" style="position:fixed;top:16px;right:16px;z-index:40;background:rgba(255,255,255,0.06);border:1px solid rgba(232,236,249,0.15);color:var(--star);width:42px;height:42px;border-radius:12px;font-size:18px;touch-action:none;cursor:grab;">⚙️</button>
 
 <!-- ADMIN MODAL -->
 <div class="modal-overlay hidden" id="adminModal">
-  <div class="modal-box" style="max-width:440px;">
+  <div class="modal-box" style="max-width:480px;max-height:86vh;overflow-y:auto;">
     <div class="modal-title" style="font-size:22px;">⚙️ Admin panel</div>
 
     <div id="admin-setup-mode">
@@ -295,9 +332,60 @@
       <button id="admin-forgot-btn" style="background:none;color:var(--dim);font-size:11px;margin-top:8px;text-decoration:underline;">Parolni unutdim (qayta o'rnatish)</button>
     </div>
 
-    <div id="admin-controls" class="hidden">
-      <p style="color:var(--dim);font-size:13px;margin-bottom:12px;text-align:left;">O'yinlarni yoq/o'chir (faqat shu brauzeringizda saqlanadi):</p>
-      <div id="admin-game-list" style="text-align:left;max-height:280px;overflow-y:auto;padding-right:6px;"></div>
+    <div id="admin-controls" class="hidden" style="text-align:left;">
+
+      <!-- Announcement banner -->
+      <div class="admin-section">
+        <p class="admin-section-title">📢 E'lon matni (menyuda ko'rinadi)</p>
+        <div class="gn-input-row" style="justify-content:flex-start;">
+          <input id="admin-banner-input" type="text" placeholder="Masalan: Bugun yangi o'yin qo'shildi!" style="flex:1;min-width:0;">
+          <button id="admin-banner-save">Saqlash</button>
+        </div>
+      </div>
+
+      <!-- Game management -->
+      <div class="admin-section">
+        <p class="admin-section-title">🎮 O'yinlarni boshqarish va tartiblash</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button id="admin-select-all" class="admin-mini-btn">✅ Barchasini yoqish</button>
+          <button id="admin-select-none" class="admin-mini-btn">🚫 Barchasini o'chirish</button>
+        </div>
+        <div id="admin-game-list" style="max-height:260px;overflow-y:auto;padding-right:6px;"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="admin-section">
+        <p class="admin-section-title">📊 Statistika (shu qurilmada)</p>
+        <div id="admin-stats-list" style="max-height:160px;overflow-y:auto;font-size:12px;color:var(--dim);"></div>
+        <button id="admin-reset-stats" class="admin-mini-btn" style="margin-top:10px;">Statistikani tozalash</button>
+      </div>
+
+      <!-- Password change -->
+      <div class="admin-section">
+        <p class="admin-section-title">🔑 Admin parolni almashtirish</p>
+        <div class="gn-input-row" style="justify-content:flex-start;">
+          <input id="admin-change-pass" type="password" placeholder="Yangi parol..." style="flex:1;min-width:0;">
+          <button id="admin-change-pass-btn">Saqlash</button>
+        </div>
+        <div id="admin-change-error" style="color:var(--red);font-size:12px;margin-top:6px;min-height:14px;"></div>
+      </div>
+
+      <!-- Backup -->
+      <div class="admin-section">
+        <p class="admin-section-title">💾 Zaxira nusxa</p>
+        <div style="display:flex;gap:8px;">
+          <button id="admin-export-btn" class="admin-mini-btn">📤 Eksport</button>
+          <button id="admin-import-btn" class="admin-mini-btn">📥 Import</button>
+        </div>
+        <textarea id="admin-backup-area" placeholder="Eksport bosilganda shu yerda matn chiqadi, yoki avvalgi nusxani shu yerga joylab Import bosing" style="display:none;width:100%;margin-top:10px;height:90px;background:rgba(255,255,255,0.06);border:1px solid rgba(232,236,249,0.2);color:var(--star);border-radius:10px;padding:10px;font-size:11px;font-family:monospace;"></textarea>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="admin-section" style="border-color:rgba(255,92,92,0.3);">
+        <p class="admin-section-title" style="color:var(--red);">⚠️ Xavfli zona</p>
+        <button id="admin-reset-all" class="admin-mini-btn" style="border-color:rgba(255,92,92,0.4);color:var(--red);">Hammasini boshlang'ich holatga qaytarish</button>
+      </div>
+
     </div>
     <div class="modal-actions" style="margin-top:20px;"><button id="adminCloseBtn" style="background:rgba(255,255,255,0.08);color:var(--star);border:1px solid rgba(232,236,249,0.2);">Yopish</button></div>
   </div>
@@ -319,6 +407,7 @@
     <h2 id="greet">Salom!</h2>
     <p>Bitta o'yinni tanla va boshla. Yutsang — chempion, yutqazsang — kula olasanmi? 😏</p>
   </div>
+  <div id="announcement-banner" class="hidden"></div>
   <div class="game-grid" id="game-grid"></div>
 </div>
 
@@ -486,6 +575,19 @@ let hiddenGames = [];
 try { hiddenGames = JSON.parse(localStorage.getItem('arcade_hidden_games') || '[]'); } catch(e){ hiddenGames = []; }
 let adminPasswordSet = null;
 try { adminPasswordSet = localStorage.getItem('arcade_admin_password'); } catch(e){ adminPasswordSet = null; }
+let gameOrder = [];
+try { gameOrder = JSON.parse(localStorage.getItem('arcade_game_order') || '[]'); } catch(e){ gameOrder = []; }
+let bannerText = '';
+try { bannerText = localStorage.getItem('arcade_banner') || ''; } catch(e){ bannerText = ''; }
+let gameStats = {};
+try { gameStats = JSON.parse(localStorage.getItem('arcade_stats') || '{}'); } catch(e){ gameStats = {}; }
+
+const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+const settingsModal = document.getElementById('settingsModal');
+const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+const volumeSlider = document.getElementById('volume-slider');
+const volumeValue = document.getElementById('volume-value');
+const muteToggle = document.getElementById('mute-toggle');
 
 const adminToggleBtn = document.getElementById('admin-toggle-btn');
 const adminModal = document.getElementById('adminModal');
@@ -502,6 +604,20 @@ const adminLoginError = document.getElementById('admin-login-error');
 const adminForgotBtn = document.getElementById('admin-forgot-btn');
 const adminGameList = document.getElementById('admin-game-list');
 const adminCloseBtn = document.getElementById('adminCloseBtn');
+const adminSelectAll = document.getElementById('admin-select-all');
+const adminSelectNone = document.getElementById('admin-select-none');
+const adminBannerInput = document.getElementById('admin-banner-input');
+const adminBannerSave = document.getElementById('admin-banner-save');
+const adminStatsList = document.getElementById('admin-stats-list');
+const adminResetStats = document.getElementById('admin-reset-stats');
+const adminChangePass = document.getElementById('admin-change-pass');
+const adminChangePassBtn = document.getElementById('admin-change-pass-btn');
+const adminChangeError = document.getElementById('admin-change-error');
+const adminExportBtn = document.getElementById('admin-export-btn');
+const adminImportBtn = document.getElementById('admin-import-btn');
+const adminBackupArea = document.getElementById('admin-backup-area');
+const adminResetAll = document.getElementById('admin-reset-all');
+const announcementBanner = document.getElementById('announcement-banner');
 
 const screenName = document.getElementById('screen-name');
 const screenMenu = document.getElementById('screen-menu');
@@ -539,8 +655,115 @@ const drawLines = [
 
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
+/* ============ Sound system ============ */
+const SoundFX = (function(){
+  let actx = null;
+  let volume = 70;
+  try { const v = parseInt(localStorage.getItem('arcade_volume')); if(!isNaN(v)) volume = v; } catch(e){}
+  let muted = false;
+  try { muted = localStorage.getItem('arcade_muted') === '1'; } catch(e){}
+  function ctx(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+  function beep(freq, dur, type, delay){
+    if(muted || volume<=0) return;
+    const c = ctx();
+    if(!c) return;
+    const t0 = c.currentTime + (delay||0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime((volume/100)*0.22, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  return {
+    click(){ beep(700, 0.045, 'square'); },
+    win(){ beep(523,0.12,'sine',0); beep(659,0.12,'sine',0.1); beep(880,0.2,'sine',0.2); },
+    lose(){ beep(220,0.28,'sawtooth',0); },
+    setVolume(v){ volume=v; try{ localStorage.setItem('arcade_volume', v); }catch(e){} },
+    getVolume(){ return volume; },
+    setMuted(m){ muted=m; try{ localStorage.setItem('arcade_muted', m?'1':'0'); }catch(e){} },
+    getMuted(){ return muted; }
+  };
+})();
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('button')) SoundFX.click(); });
+
+/* ============ Draggable buttons ============ */
+function makeDraggable(el, storageKey){
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    if(saved){ el.style.top = saved.top+'px'; el.style.left = saved.left+'px'; el.style.right='auto'; el.style.bottom='auto'; }
+  } catch(e){}
+  let dragging=false, moved=false, startX=0, startY=0, origX=0, origY=0;
+  function onDown(e){
+    dragging = true; moved = false;
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    const rect = el.getBoundingClientRect();
+    origX = rect.left; origY = rect.top;
+    el.style.cursor = 'grabbing';
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    const dx = p.clientX-startX, dy = p.clientY-startY;
+    if(Math.abs(dx)>4 || Math.abs(dy)>4) moved = true;
+    if(!moved) return;
+    e.preventDefault();
+    let nx = origX+dx, ny = origY+dy;
+    nx = Math.max(4, Math.min(window.innerWidth-el.offsetWidth-4, nx));
+    ny = Math.max(4, Math.min(window.innerHeight-el.offsetHeight-4, ny));
+    el.style.left = nx+'px'; el.style.top = ny+'px'; el.style.right='auto'; el.style.bottom='auto';
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    el.style.cursor = 'grab';
+    if(moved){
+      try { localStorage.setItem(storageKey, JSON.stringify({ top: parseFloat(el.style.top), left: parseFloat(el.style.left) })); } catch(e){}
+    }
+  }
+  el.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  el.addEventListener('touchstart', onDown, {passive:true});
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('touchend', onUp);
+  return { wasMoved: () => moved };
+}
+const adminDrag = makeDraggable(adminToggleBtn, 'arcade_admin_btn_pos');
+const settingsDrag = makeDraggable(settingsToggleBtn, 'arcade_settings_btn_pos');
+
+/* ============ Settings modal ============ */
+volumeSlider.value = SoundFX.getVolume();
+volumeValue.textContent = SoundFX.getVolume()+'%';
+muteToggle.checked = SoundFX.getMuted();
+settingsToggleBtn.addEventListener('click', () => { if(!settingsDrag.wasMoved()) settingsModal.classList.remove('hidden'); });
+settingsCloseBtn.onclick = () => settingsModal.classList.add('hidden');
+volumeSlider.addEventListener('input', () => {
+  SoundFX.setVolume(parseInt(volumeSlider.value));
+  volumeValue.textContent = volumeSlider.value+'%';
+});
+muteToggle.addEventListener('change', () => { SoundFX.setMuted(muteToggle.checked); });
+
+function saveStats(){ try { localStorage.setItem('arcade_stats', JSON.stringify(gameStats)); } catch(e){} }
+function recordPlay(id){
+  if(!gameStats[id]) gameStats[id] = { plays:0, wins:0, losses:0 };
+  gameStats[id].plays++;
+  saveStats();
+}
+function recordResult(id, status){
+  if(!gameStats[id]) gameStats[id] = { plays:0, wins:0, losses:0 };
+  if(status==='win') gameStats[id].wins++;
+  else if(status==='lose') gameStats[id].losses++;
+  saveStats();
+}
+
 function finish(status, detail){
   if(activeGame && activeGame.stop) activeGame.stop();
+  if(status==='win') SoundFX.win(); else if(status==='lose') SoundFX.lose();
+  recordResult(currentGameId, status);
   let title, pool;
   if(status==='win'){ title='🏆 G\'ALABA!'; pool=winLines; }
   else if(status==='lose'){ title='💀 YUTQAZDING!'; pool=loseLines; }
@@ -617,6 +840,7 @@ function launchGame(id){
   screenMenu.classList.add('hidden');
   screenGame.classList.remove('hidden');
   resultModal.classList.add('hidden');
+  recordPlay(id);
   activeGame = g.init(gameArea, { name: playerName, finish });
   const iconBg = document.createElement('div');
   iconBg.className = 'game-icon-bg';
@@ -638,9 +862,22 @@ nameForm.addEventListener('submit', e=>{
   renderMenu();
 });
 
+function getOrderedGames(){
+  const byId = {}; GAMES.forEach(g=> byId[g.id]=g);
+  const ordered = gameOrder.map(id=>byId[id]).filter(Boolean);
+  GAMES.forEach(g=>{ if(!gameOrder.includes(g.id)) ordered.push(g); });
+  return ordered;
+}
+
 function renderMenu(){
+  if(bannerText && bannerText.trim()){
+    announcementBanner.textContent = '📢 ' + bannerText;
+    announcementBanner.classList.remove('hidden');
+  } else {
+    announcementBanner.classList.add('hidden');
+  }
   gameGrid.innerHTML = '';
-  GAMES.filter(g => !hiddenGames.includes(g.id)).forEach(g=>{
+  getOrderedGames().filter(g => !hiddenGames.includes(g.id)).forEach(g=>{
     const card = document.createElement('button');
     card.className = 'game-card';
     card.innerHTML = `<div class="gc-emoji">${g.emoji}</div><div class="gc-title">${g.title}</div><div class="gc-desc">${g.desc}</div>`;
@@ -653,7 +890,8 @@ function renderMenu(){
 }
 
 /* ============ Admin panel ============ */
-adminToggleBtn.onclick = () => {
+adminToggleBtn.addEventListener('click', () => {
+  if(adminDrag.wasMoved()) return;
   adminModal.classList.remove('hidden');
   adminControls.classList.add('hidden');
   if(adminPasswordSet){
@@ -667,7 +905,7 @@ adminToggleBtn.onclick = () => {
     adminNewPass.value = ''; adminNewPass2.value = '';
     adminSetupError.textContent = '';
   }
-};
+});
 adminCloseBtn.onclick = () => { adminModal.classList.add('hidden'); };
 
 adminSetupBtn.onclick = () => {
@@ -678,14 +916,14 @@ adminSetupBtn.onclick = () => {
   adminPasswordSet = p1;
   adminSetupMode.classList.add('hidden');
   adminControls.classList.remove('hidden');
-  renderAdminList();
+  openAdminControls();
 };
 
 adminPassBtn.onclick = () => {
   if(adminPass.value === adminPasswordSet){
     adminLoginMode.classList.add('hidden');
     adminControls.classList.remove('hidden');
-    renderAdminList();
+    openAdminControls();
   } else {
     adminLoginError.textContent = "Admin parol xato.";
   }
@@ -703,15 +941,21 @@ adminForgotBtn.onclick = () => {
   }
 };
 
+function openAdminControls(){
+  adminBannerInput.value = bannerText;
+  renderAdminList();
+  renderAdminStats();
+}
+
 function renderAdminList(){
   adminGameList.innerHTML = '';
-  GAMES.forEach(g=>{
-    const row = document.createElement('label');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(232,236,249,0.08);cursor:pointer;';
+  const ordered = getOrderedGames();
+  ordered.forEach((g, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'admin-game-row';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = !hiddenGames.includes(g.id);
-    cb.style.cssText = 'width:18px;height:18px;flex-shrink:0;';
     cb.onchange = () => {
       if(cb.checked) hiddenGames = hiddenGames.filter(id => id !== g.id);
       else if(!hiddenGames.includes(g.id)) hiddenGames.push(g.id);
@@ -720,12 +964,124 @@ function renderAdminList(){
     };
     const label = document.createElement('span');
     label.textContent = `${g.emoji} ${g.title}`;
-    label.style.fontSize = '14px';
-    row.appendChild(cb);
-    row.appendChild(label);
+    const upBtn = document.createElement('button');
+    upBtn.className = 'admin-order-btn'; upBtn.textContent = '↑'; upBtn.disabled = idx===0;
+    upBtn.onclick = () => { moveGame(g.id, -1); };
+    const downBtn = document.createElement('button');
+    downBtn.className = 'admin-order-btn'; downBtn.textContent = '↓'; downBtn.disabled = idx===ordered.length-1;
+    downBtn.onclick = () => { moveGame(g.id, 1); };
+    row.appendChild(cb); row.appendChild(label); row.appendChild(upBtn); row.appendChild(downBtn);
     adminGameList.appendChild(row);
   });
 }
+
+function moveGame(id, dir){
+  const ordered = getOrderedGames().map(g=>g.id);
+  const i = ordered.indexOf(id);
+  const j = i+dir;
+  if(j<0 || j>=ordered.length) return;
+  [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+  gameOrder = ordered;
+  try { localStorage.setItem('arcade_game_order', JSON.stringify(gameOrder)); } catch(e){}
+  renderAdminList();
+  renderMenu();
+}
+
+adminSelectAll.onclick = () => {
+  hiddenGames = [];
+  try { localStorage.setItem('arcade_hidden_games', JSON.stringify(hiddenGames)); } catch(e){}
+  renderAdminList(); renderMenu();
+};
+adminSelectNone.onclick = () => {
+  hiddenGames = GAMES.map(g=>g.id);
+  try { localStorage.setItem('arcade_hidden_games', JSON.stringify(hiddenGames)); } catch(e){}
+  renderAdminList(); renderMenu();
+};
+
+adminBannerSave.onclick = () => {
+  bannerText = adminBannerInput.value.trim();
+  try { localStorage.setItem('arcade_banner', bannerText); } catch(e){}
+  renderMenu();
+};
+
+function renderAdminStats(){
+  const entries = Object.keys(gameStats).map(id=>{
+    const g = GAMES.find(x=>x.id===id);
+    return { id, name: g ? `${g.emoji} ${g.title}` : id, ...gameStats[id] };
+  }).sort((a,b)=> b.plays-a.plays);
+  if(!entries.length){
+    adminStatsList.innerHTML = '<p style="text-align:center;padding:10px 0;">Hali statistika yo\'q.</p>';
+    return;
+  }
+  adminStatsList.innerHTML = entries.map(e=>
+    `<div class="admin-stat-row"><span>${e.name}</span><span>${e.plays} marta · 🏆${e.wins} · 💀${e.losses}</span></div>`
+  ).join('');
+}
+adminResetStats.onclick = () => {
+  if(confirm("Statistikani tozalaysizmi?")){
+    gameStats = {};
+    saveStats();
+    renderAdminStats();
+  }
+};
+
+adminChangePassBtn.onclick = () => {
+  const p = adminChangePass.value;
+  if(p.length < 4){ adminChangeError.textContent = "Parol kamida 4 belgidan iborat bo'lsin."; return; }
+  try { localStorage.setItem('arcade_admin_password', p); } catch(e){}
+  adminPasswordSet = p;
+  adminChangePass.value = '';
+  adminChangeError.textContent = '';
+  adminChangeError.style.color = 'var(--green)';
+  adminChangeError.textContent = 'Parol yangilandi!';
+  setTimeout(()=>{ adminChangeError.textContent=''; adminChangeError.style.color='var(--red)'; }, 2000);
+};
+
+adminExportBtn.onclick = () => {
+  const data = { hiddenGames, gameOrder, bannerText, gameStats };
+  adminBackupArea.value = JSON.stringify(data);
+  adminBackupArea.style.display = 'block';
+  adminBackupArea.select();
+};
+adminImportBtn.onclick = () => {
+  if(adminBackupArea.style.display !== 'block'){
+    adminBackupArea.value = '';
+    adminBackupArea.style.display = 'block';
+    adminBackupArea.placeholder = 'Avvalgi eksport qilingan matnni shu yerga joylab, qayta Import bosing';
+    adminBackupArea.focus();
+    return;
+  }
+  try {
+    const data = JSON.parse(adminBackupArea.value);
+    if(data.hiddenGames) hiddenGames = data.hiddenGames;
+    if(data.gameOrder) gameOrder = data.gameOrder;
+    if(typeof data.bannerText === 'string') bannerText = data.bannerText;
+    if(data.gameStats) gameStats = data.gameStats;
+    try {
+      localStorage.setItem('arcade_hidden_games', JSON.stringify(hiddenGames));
+      localStorage.setItem('arcade_game_order', JSON.stringify(gameOrder));
+      localStorage.setItem('arcade_banner', bannerText);
+      localStorage.setItem('arcade_stats', JSON.stringify(gameStats));
+    } catch(e){}
+    renderAdminList(); renderAdminStats(); renderMenu();
+    adminBackupArea.style.display = 'none';
+    alert('Import muvaffaqiyatli bajarildi!');
+  } catch(e){
+    alert("Xato: matn to'g'ri JSON formatida emas.");
+  }
+};
+
+adminResetAll.onclick = () => {
+  if(confirm("DIQQAT: bu barcha sozlamalarni (yashirilgan o'yinlar, tartib, statistika, e'lon, admin parol) o'chiradi. Davom etasizmi?")){
+    ['arcade_hidden_games','arcade_game_order','arcade_banner','arcade_stats','arcade_admin_password'].forEach(k=>{
+      try { localStorage.removeItem(k); } catch(e){}
+    });
+    hiddenGames = []; gameOrder = []; bannerText = ''; gameStats = {}; adminPasswordSet = null;
+    adminModal.classList.add('hidden');
+    renderMenu();
+    alert("Hammasi boshlang'ich holatga qaytarildi.");
+  }
+};
 
 /* ============ GAME 1: SUPERNOVA ============ */
 function initSupernova(container, api){
@@ -2332,7 +2688,7 @@ function initTrivia(container, api){
   const questions = [
     { q:"O'zbekistonning poytaxti qaysi shahar?", opts:["Samarqand","Toshkent","Buxoro","Andijon"], a:1 },
     { q:"Yer necha kunda Quyosh atrofida aylanadi?", opts:["30","365","12","100"], a:1 },
-    { q:"Suvning kimyoviy formulasi?", opts:["CO2","O2","H2O","NaCl"], a:2 },
+    { q:"Suvning kimyoviy formulasi?", opts:["CO2","O2","H2O","NaCl"], a:2 },    
     { q:"Quyosh sistemasidagi eng katta sayyora?", opts:["Mars","Yupiter","Yer","Venera"], a:1 },
     { q:"1 soatda necha daqiqa bor?", opts:["50","60","100","90"], a:1 },
   ];
@@ -2680,8 +3036,8 @@ function initDino(container, api){
     if(score>=300){ endGame(true); return; }
     paintBG(ctx, canvas.width, canvas.height, 'desert', performance.now());
     ctx.strokeStyle='rgba(120,70,20,0.4)';
-    ctx.beginPath(); ctx.moveTo(0,groundY()+30); ctx.lineTo(canvas.width,groundY()+40); ctx.stroke();
-    ctx.font='45px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.beginPath(); ctx.moveTo(0,groundY()+30); ctx.lineTo(canvas.width,groundY()+30); ctx.stroke();
+    ctx.font='30px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     obstacles.forEach(o=> ctx.fillText('🌵', o.x+o.w/2, groundY()-o.h/2+30));
     ctx.save();
     ctx.translate(dinoX, dinoBottom+15);
